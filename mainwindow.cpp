@@ -95,10 +95,17 @@ void MainWindow::deleteParentFolder() {
 
 void MainWindow::save() {
     QStringList homePath = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
-    QString filename = homePath.first().split(QDir::separator()).last() + "/Documents/default.ini";
+    QString directory = homePath.first().split(QDir::separator()).last() + "/Documents/FLAM/";
+    QString filename = directory+"default.ini";
+    QDir dir(directory);
+    if (!dir.exists()) {
+        dir.mkdir(directory);
+    }
+    qDebug() << "Saving to:" << filename;
     QFile file(filename);
     if (file.open(QIODevice::WriteOnly)){
         QTextStream stream (&file);
+        stream << "[FOLDERS]" << Qt::endl;
         for(int i = 0; i<folderList->count();++i){
             stream << folderList->at(i)->getLabelText() << Qt::endl;
         }
@@ -107,13 +114,29 @@ void MainWindow::save() {
 }
 
 void MainWindow::load() {
+    int current = 0;
     QStringList homePath = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
-    QString filename = homePath.first().split(QDir::separator()).last() + "/Documents/default.ini";
+    QString filename = homePath.first().split(QDir::separator()).last() + "/Documents/FLAM/default.ini";
     QFile file(filename);
     if (file.open(QIODevice::ReadOnly)){
         QTextStream stream(&file);
         while (!stream.atEnd()) {
-            addNewParentFolder(stream.readLine());
+            QString line = stream.readLine();
+            if (line.startsWith("[")) {
+                if (line == "[FOLDERS]") {
+                    current = 1;
+                } else if (line == "[MINSIZE]") {
+                    current = 2;
+                }
+            } else {
+                //Read folders
+                if (current == 1) {
+                    addNewParentFolder(line);
+                //Read min size
+                } else if (current == 2){
+
+                }
+            }
         }
         file.close();
         refreshDirectories();

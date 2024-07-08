@@ -13,7 +13,6 @@ void MoveWorker::moveFolders() {
     QString destDrive = destDir.absolutePath().left(2);
 
     if (sourceDir.exists() && (sourceDrive == destDrive)) {
-        // Same drive, so we use rename
         if (sourceDir.rename(sourceDir.absolutePath() + "/" + folder, destDir.absolutePath() + "/" + folder)) {
             emit progressChanged(100);
         } else {
@@ -50,16 +49,13 @@ void MoveWorker::moveFolders() {
 }
 
 qint64 MoveWorker::dirSize(QString source) {
-    //Get total folder size
     qint64 size = 0;
     QDir dir(source);
-    //calculate total size of current directories' files
     QDir::Filters fileFilters = QDir::Files|QDir::System|QDir::Hidden;
     for(QString filePath : dir.entryList(fileFilters)) {
         QFileInfo fi(dir, filePath);
         size+= fi.size();
     }
-    //add size of child directories recursively
     QDir::Filters dirFilters = QDir::Dirs|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
     for(QString childDirPath : dir.entryList(dirFilters))
         size+= dirSize(source + QDir::separator() + childDirPath);

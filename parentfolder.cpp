@@ -21,7 +21,7 @@ ParentFolder::ParentFolder(QWidget *parent, QString folderName)
     moveButton->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Maximum);
     moveButton->setEnabled(false);
     QVBoxLayout* layout = new QVBoxLayout(this);
-    QHBoxLayout * hlayout = new QHBoxLayout(); //No parent is okay here because I will set the parent layout with addLayout() method. B I G  B R A I N
+    QHBoxLayout * hlayout = new QHBoxLayout();
     hlayout->addWidget(newButton);
     hlayout->addWidget(moveButton);
     hlayout->addWidget(deleteButton);
@@ -45,15 +45,20 @@ ParentFolder::ParentFolder(QWidget *parent, QString folderName)
 
 int ParentFolder::getLargestWidth() {
 
-    int maxWidth = 0;
-    QFontMetrics fm(font());
-    for (int i = 0; i<list->count();++i) {
-        int textWidth = fm.horizontalAdvance(list->item(i)->text());
-        maxWidth = std::max(maxWidth, std::max(textWidth, fm.horizontalAdvance(label->text())+20));
+    QFont boldFont = font();
+    boldFont.setBold(true);
+    int width = 0;
+    QFontMetrics fm(boldFont);
+    if (list->count() != 0) {
+        for (int i = 0; i<list->count();++i) {
+            int textWidth = fm.horizontalAdvance(list->item(i)->text());
+            width = std::max(250, std::max(textWidth+20, fm.horizontalAdvance(label->text())+20));
+        }
+    } else {
+        width = std::max(250, fm.horizontalAdvance(label->text())+20);
     }
-
-    int minWidth = qMax(label->width(), maxWidth + 10);
-    return minWidth;
+    qDebug() << "Width:" << width;
+    return width;
 }
 
 QString ParentFolder::getLabelText() {
@@ -115,6 +120,7 @@ void ParentFolder::newButtonClicked() {
             if (dir.mkdir(newFolderName)) {
                 QListWidgetItem *item = new QListWidgetItem(newFolderName, list);
                 list->addItem(item);
+                emit refresh();
             } else {
                 QMessageBox::critical(this, tr("Error"), tr("Failed to create folder!"));
             }
@@ -163,7 +169,7 @@ void ParentFolder::processNextItem() {
 
     QListWidgetItem* item = itemQueue.dequeue();
     QString folderName = item->text();
-    qDebug() << "Starting move for folder: " << folderName;
+    qDebug() << "Starting move for folder:" << folderName;
     progressDialog = new QProgressDialog("Moving " + item->text(), "Cancel", 0, 100, this);
     progressDialog->setWindowModality(Qt::NonModal);
 
@@ -189,7 +195,7 @@ void ParentFolder::quitTransfer(QThread * thread) {
 
 void ParentFolder::moveFinished(QString folder) {
     progressDialog->reject();
-    QMessageBox::information(this,"Folder transferred successfully", folder+" has been transferred successfully!");
+    QMessageBox::information(this,tr("Folder transferred successfully"), tr("%1 has been transferred successfully!").arg(folder));
     if (!itemQueue.isEmpty()) {
         processNextItem();
     } else {
