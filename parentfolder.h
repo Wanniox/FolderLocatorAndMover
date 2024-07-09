@@ -18,6 +18,7 @@
 #include <QThread>
 #include <QProgressDialog>
 #include <QQueue>
+#include "moveworker.h"
 
 class ParentFolder : public QWidget
 {
@@ -37,10 +38,11 @@ public slots:
     void deleteButtonClicked();
     void labelClicked();
     void updateButtons();
-    void moveFinished(QString);
+    void moveFinished(QString,int);
     void moveButtonClicked();
     void processNextItem();
-    void quitTransfer(QThread*);
+    void cancelled(QString,MoveWorker*,QThread*);
+    void setValue(int);
 signals:
     void deleteClicked();
     void labelSelected(QObject *);
@@ -55,6 +57,7 @@ private:
     QProgressDialog* progressDialog;
     QString destinationDirectory;
     QString sourceDirectory;
+    int value = 0;
 };
 
 #endif // PARENTFOLDER_H

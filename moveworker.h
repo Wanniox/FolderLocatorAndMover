@@ -19,11 +19,13 @@ signals:
     void errorMessage(const QString&);
 public slots:
     void moveFolders();
+    void stop();
 
 private:
     QListWidgetItem * selectedItem;
     QString destinationDirectory;
     QString sourceDirectory;
+    bool quit = false;
 
     bool copyFolder(const QDir &, const QString &, const qint64 &, qint64 &);
     bool deleteFolder(const QString &);

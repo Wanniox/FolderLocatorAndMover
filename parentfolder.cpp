@@ -57,7 +57,6 @@ int ParentFolder::getLargestWidth() {
     } else {
         width = std::max(250, fm.horizontalAdvance(label->text())+20);
     }
-    qDebug() << "Width:" << width;
     return width;
 }
 
@@ -166,39 +165,54 @@ void ParentFolder::processNextItem() {
     if (itemQueue.isEmpty()) {
         return;
     }
-
+    value = 0;
     QListWidgetItem* item = itemQueue.dequeue();
     QString folderName = item->text();
     qDebug() << "Starting move for folder:" << folderName;
     progressDialog = new QProgressDialog("Moving " + item->text(), "Cancel", 0, 100, this);
-    progressDialog->setWindowModality(Qt::NonModal);
+    progressDialog->setWindowModality(Qt::ApplicationModal);
+    progressDialog->setMinimumDuration(0);
+    progressDialog->show();
 
     MoveWorker* worker = new MoveWorker(item, destinationDirectory, sourceDirectory);
     QThread* thread = new QThread;
     worker->moveToThread(thread);
 
-    connect(worker, &MoveWorker::finished, this, [=] { moveFinished(folderName); });
+    connect(worker, &MoveWorker::finished, this, [=] {moveFinished(folderName, value);});
     connect(worker, &MoveWorker::finished, thread, &QThread::quit);
     connect(worker, &MoveWorker::finished, worker, &MoveWorker::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
-    connect(progressDialog, &QProgressDialog::canceled, this, [=] {ParentFolder::quitTransfer(thread);});
+    connect(progressDialog, &QProgressDialog::canceled, this, [=] {ParentFolder::cancelled(folderName,worker,thread);});
     connect(worker, &MoveWorker::progressChanged, progressDialog, &QProgressDialog::setValue);
+    connect(worker, &MoveWorker::progressChanged, this, &ParentFolder::setValue);
 
     thread->start();
     QMetaObject::invokeMethod(worker, "moveFolders", Qt::QueuedConnection);
 }
 
-void ParentFolder::quitTransfer(QThread * thread) {
-    thread->quit();
+void ParentFolder::setValue(int workerValue) {
+    value = workerValue;
 }
 
-void ParentFolder::moveFinished(QString folder) {
-    progressDialog->reject();
-    QMessageBox::information(this,tr("Folder transferred successfully"), tr("%1 has been transferred successfully!").arg(folder));
+void ParentFolder::moveFinished(QString folder, int value) {
+    qDebug() << "Value:" << value;
+    if (value == 100) {
+        progressDialog->reject();
+        QMessageBox::information(this,tr("Folder transferred successfully"), tr("%1 has been transferred successfully!").arg(folder));
+    }
     if (!itemQueue.isEmpty()) {
         processNextItem();
     } else {
         emit refresh();
     }
+}
+
+void ParentFolder::cancelled(QString name,MoveWorker*worker,QThread*thread) {
+    //THIS IS SO BAD D:
+    thread->terminate();
+    thread->wait();
+    thread->deleteLater();
+    emit worker->finished();
+    QMessageBox::warning(this,tr("Cancelled!"),tr("Transferring %1 has been cancelled! Note that duplicate folders might be visible!").arg(name));
 }
