@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
+//TODO: Cancelling also deletes destination folder. (Currently not possible because cancel stops transfer unsafe. Files still in use by program after cancel is pressed!)
 //TODO: Change shortcuts to new folder.
 //TODO: Search (sub)folders.
 //TODO: Double clicking a subfolder should open the file explorer in that folder.
