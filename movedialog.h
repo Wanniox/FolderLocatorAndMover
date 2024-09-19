@@ -21,7 +21,6 @@ private:
     QListWidget *listWidget;
     QPushButton *okButton;
     QPushButton *cancelButton;
-    ParentFolder *selectedFolderItem;
 };
 
 #endif // MOVEDIALOG_H
