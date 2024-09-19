@@ -38,7 +38,7 @@ public slots:
     void deleteButtonClicked();
     void labelClicked();
     void updateButtons();
-    void moveFinished(QString,int);
+    void moveFinished(QString,bool);
     void moveButtonClicked();
     void processNextItem();
     void cancelled(QString,MoveWorker*,QThread*);

@@ -18,7 +18,7 @@ void MoveWorker::moveFolders() {
         } else {
             emit progressChanged(0);
             emit errorMessage("Failed to move folder.");
-            emit finished();
+            emit finished(false);
             return;
         }
     } else if (sourceDir.exists()) {
@@ -35,7 +35,7 @@ void MoveWorker::moveFolders() {
             if (! deleteFolder(sourceFolderPath)) {
                 emit progressChanged(0);
                 emit errorMessage("Failed to delete the source folder.");
-                emit finished();
+                emit finished(false);
                 return;
             }
         } else {
@@ -46,12 +46,12 @@ void MoveWorker::moveFolders() {
             } else {
                 emit progressChanged(0);
                 emit errorMessage("Failed to copy folder.");
-                emit finished();
+                emit finished(false);
                 return;
             }
         }
     }
-    emit finished();
+    emit finished(true);
 }
 
 qint64 MoveWorker::dirSize(QString source) {

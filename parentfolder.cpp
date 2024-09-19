@@ -178,7 +178,7 @@ void ParentFolder::processNextItem() {
     QThread* thread = new QThread;
     worker->moveToThread(thread);
 
-    connect(worker, &MoveWorker::finished, this, [=] {moveFinished(folderName, value);});
+    connect(worker, &MoveWorker::finished, this, [=](bool isSuccessful) {moveFinished(folderName,isSuccessful);});
     connect(worker, &MoveWorker::finished, thread, &QThread::quit);
     connect(worker, &MoveWorker::finished, worker, &MoveWorker::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
@@ -195,10 +195,10 @@ void ParentFolder::setValue(int workerValue) {
     value = workerValue;
 }
 
-void ParentFolder::moveFinished(QString folder, int value) {
+void ParentFolder::moveFinished(QString folder,bool isSuccessful) {
     qDebug() << "Value:" << value;
-    if (value == 100) {
-        progressDialog->reject();
+    progressDialog->reject();
+    if (isSuccessful) {
         QMessageBox::information(this,tr("Folder transferred successfully"), tr("%1 has been transferred successfully!").arg(folder));
     }
     if (!itemQueue.isEmpty()) {
@@ -213,6 +213,6 @@ void ParentFolder::cancelled(QString name,MoveWorker*worker,QThread*thread) {
     thread->terminate();
     thread->wait();
     thread->deleteLater();
-    emit worker->finished();
+    emit worker->finished(false);
     QMessageBox::warning(this,tr("Cancelled!"),tr("Transferring %1 has been cancelled! Note that duplicate folders might be visible!").arg(name));
 }

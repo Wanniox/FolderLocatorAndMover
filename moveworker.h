@@ -15,7 +15,7 @@ public:
     qint64 dirSize(QString);
 signals:
     void progressChanged(int);
-    void finished();
+    void finished(bool);
     void errorMessage(const QString&);
 public slots:
     void moveFolders();
